@@ -6,6 +6,8 @@
 (function () {
   "use strict";
 
+  const MAX_LOG_ENTRIES = 500;
+
   // ---- Socket.IO connection ----
   const socket = io({ transports: ["websocket", "polling"] });
 
@@ -112,7 +114,7 @@
   function appendToFeed(feedEl, entry, autoScrollCheckbox) {
     feedEl.appendChild(renderLogEntry(entry));
     // Cap entries
-    while (feedEl.children.length > 500) {
+    while (feedEl.children.length > MAX_LOG_ENTRIES) {
       feedEl.removeChild(feedEl.firstChild);
     }
     if (autoScrollCheckbox && autoScrollCheckbox.checked) {
@@ -248,19 +250,27 @@
       return;
     }
     let html = "<h3>Active Listeners</h3>";
-    items.forEach(([id, info]) => {
-      html += `<div class="active-item">
-        <div class="active-item-info">
-          <span class="active-item-dot"></span>
-          <span>Port ${info.port}${info.filter ? ` (filter: ${info.filter})` : ""}</span>
-        </div>
-        <button class="btn btn-small btn-stop" onclick="window._stopReceiver('${id}')">Stop</button>
-      </div>`;
-    });
     list.innerHTML = html;
+    items.forEach(([id, info]) => {
+      const row = document.createElement("div");
+      row.className = "active-item";
+      const infoEl = document.createElement("div");
+      infoEl.className = "active-item-info";
+      infoEl.innerHTML = '<span class="active-item-dot"></span>';
+      const label = document.createElement("span");
+      label.textContent = `Port ${info.port}${info.filter ? ` (filter: ${info.filter})` : ""}`;
+      infoEl.appendChild(label);
+      const btn = document.createElement("button");
+      btn.className = "btn btn-small btn-stop";
+      btn.textContent = "Stop";
+      btn.addEventListener("click", () => stopReceiver(id));
+      row.appendChild(infoEl);
+      row.appendChild(btn);
+      list.appendChild(row);
+    });
   }
 
-  window._stopReceiver = (id) => {
+  function stopReceiver(id) {
     api("recv/stop", { id: id }).then((res) => {
       if (res.status === "ok") {
         delete activeReceivers[id];
@@ -271,7 +281,7 @@
         }
       }
     });
-  };
+  }
 
   $("#recvForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -289,7 +299,7 @@
   });
 
   $("#btnRecvStop").addEventListener("click", () => {
-    Object.keys(activeReceivers).forEach((id) => window._stopReceiver(id));
+    Object.keys(activeReceivers).forEach((id) => stopReceiver(id));
   });
 
   $("#btnRecvClear").addEventListener("click", () => {
@@ -309,19 +319,27 @@
       return;
     }
     let html = "<h3>Active Bridges</h3>";
-    items.forEach(([id, info]) => {
-      html += `<div class="active-item">
-        <div class="active-item-info">
-          <span class="active-item-dot"></span>
-          <span>:${info.in_port} → ${info.out_host}:${info.out_port}${info.filter ? ` (${info.filter})` : ""}</span>
-        </div>
-        <button class="btn btn-small btn-stop" onclick="window._stopBridge('${id}')">Stop</button>
-      </div>`;
-    });
     list.innerHTML = html;
+    items.forEach(([id, info]) => {
+      const row = document.createElement("div");
+      row.className = "active-item";
+      const infoEl = document.createElement("div");
+      infoEl.className = "active-item-info";
+      infoEl.innerHTML = '<span class="active-item-dot"></span>';
+      const label = document.createElement("span");
+      label.textContent = `:${info.in_port} → ${info.out_host}:${info.out_port}${info.filter ? ` (${info.filter})` : ""}`;
+      infoEl.appendChild(label);
+      const btn = document.createElement("button");
+      btn.className = "btn btn-small btn-stop";
+      btn.textContent = "Stop";
+      btn.addEventListener("click", () => stopBridge(id));
+      row.appendChild(infoEl);
+      row.appendChild(btn);
+      list.appendChild(row);
+    });
   }
 
-  window._stopBridge = (id) => {
+  function stopBridge(id) {
     api("bridge/stop", { id: id }).then((res) => {
       if (res.status === "ok") {
         delete activeBridges[id];
@@ -332,7 +350,7 @@
         }
       }
     });
-  };
+  }
 
   $("#bridgeForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -363,7 +381,7 @@
   });
 
   $("#btnBridgeStop").addEventListener("click", () => {
-    Object.keys(activeBridges).forEach((id) => window._stopBridge(id));
+    Object.keys(activeBridges).forEach((id) => stopBridge(id));
   });
 
   // ==================== THEATERGWD PRESETS TAB ====================

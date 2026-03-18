@@ -11,6 +11,8 @@ from pythonosc import udp_client, osc_server, dispatcher, osc_message_builder
 class OSCEngine:
     """Core OSC engine managing send/receive/bridge operations."""
 
+    FLOAT_PRECISION = 6
+
     def __init__(self, socketio):
         self.socketio = socketio
         self._receivers = {}
@@ -42,7 +44,7 @@ class OSCEngine:
     @staticmethod
     def _serialize_arg(arg):
         if isinstance(arg, float):
-            return {"type": "f", "value": round(arg, 6)}
+            return {"type": "f", "value": round(arg, OSCEngine.FLOAT_PRECISION)}
         elif isinstance(arg, int):
             return {"type": "i", "value": arg}
         elif isinstance(arg, str):

@@ -44,6 +44,8 @@ examples:
     print(f"\n  oscl gooey — OSC Control GUI")
     print(f"  ────────────────────────────")
     print(f"  Running at: {url}")
+    if args.host == "0.0.0.0":
+        print(f"  ⚠ Accessible from other devices on your network")
     print(f"  Press Ctrl+C to quit\n")
 
     if not args.no_browser:
