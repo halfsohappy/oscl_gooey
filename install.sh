@@ -40,7 +40,7 @@ done
 
 if [ -z "$PYTHON" ]; then
   echo ""
-  fail "Python 3.8+ is required but was not found."
+  echo "  Python 3.8+ is required but was not found."
   echo ""
   echo "  Install Python first:"
   echo "    macOS:   brew install python"
