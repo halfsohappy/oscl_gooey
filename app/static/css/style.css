@@ -638,6 +638,45 @@ select {
   to { opacity: 1; transform: translateX(0); }
 }
 
+/* ---- Config builder ---- */
+.cfg-preview {
+  background: var(--bg-alt) !important;
+  font-size: 12px !important;
+  color: var(--accent) !important;
+  letter-spacing: 0.2px;
+}
+
+/* ---- Keywords reference ---- */
+.keyword-search {
+  margin-bottom: 8px;
+}
+
+.keyword-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.keyword-item {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--bg-alt);
+  font-size: 12px;
+}
+
+.keyword-item:last-child {
+  border-bottom: none;
+}
+
+.keyword-term {
+  font-weight: 500;
+  color: var(--accent);
+  margin-right: 6px;
+}
+
+.keyword-def {
+  color: var(--text-medium);
+  font-weight: 300;
+}
+
 /* ---- Footer ---- */
 .app-footer {
   text-align: center;

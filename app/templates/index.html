@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&family=Playwrite+DE+Grund:wght@100..400&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -289,21 +290,87 @@
           </div>
 
           <div class="preset-section">
-            <h3>Direct Send</h3>
+            <h3>Config String Builder</h3>
+            <p class="card-desc">Build a config payload with individual fields — or edit the combined string directly.</p>
             <div class="form-row">
               <div class="form-group">
-                <label for="presetDirectName">Name</label>
-                <input type="text" id="presetDirectName" value="quickSend" placeholder="Name">
+                <label for="cfgDirectName">Name</label>
+                <input type="text" id="cfgDirectName" value="quickSend" placeholder="Name">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="cfgValue">value <span class="hint">(sensor to stream)</span></label>
+                <select id="cfgValue">
+                  <option value="">— none —</option>
+                  <option value="accelX">accelX</option>
+                  <option value="accelY">accelY</option>
+                  <option value="accelZ">accelZ</option>
+                  <option value="accelLength">accelLength</option>
+                  <option value="gyroX">gyroX</option>
+                  <option value="gyroY">gyroY</option>
+                  <option value="gyroZ">gyroZ</option>
+                  <option value="gyroLength">gyroLength</option>
+                  <option value="baro">baro</option>
+                  <option value="eulerX">eulerX</option>
+                  <option value="eulerY">eulerY</option>
+                  <option value="eulerZ">eulerZ</option>
+                </select>
               </div>
               <div class="form-group">
-                <label for="presetDirectPayload">Config Payload</label>
-                <input type="text" id="presetDirectPayload" placeholder='value:accelX, ip:192.168.1.50, port:9000, adr:/test'>
+                <label for="cfgIP">ip <span class="hint">(target IP)</span></label>
+                <input type="text" id="cfgIP" value="192.168.1.50" placeholder="192.168.1.50">
               </div>
             </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="cfgPort">port <span class="hint">(target port)</span></label>
+                <input type="number" id="cfgPort" value="9000" min="1" max="65535" placeholder="9000">
+              </div>
+              <div class="form-group">
+                <label for="cfgAdr">adr <span class="hint">(target OSC address)</span></label>
+                <input type="text" id="cfgAdr" value="/sensor/x" placeholder="/sensor/x">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="cfgLow">low <span class="hint">(output min)</span></label>
+                <input type="text" id="cfgLow" placeholder="e.g. 0">
+              </div>
+              <div class="form-group">
+                <label for="cfgHigh">high <span class="hint">(output max)</span></label>
+                <input type="text" id="cfgHigh" placeholder="e.g. 255">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="cfgPatch">patch <span class="hint">(assign to patch)</span></label>
+                <input type="text" id="cfgPatch" placeholder="e.g. showPatch">
+              </div>
+              <div class="form-group">
+                <label for="cfgPeriod">period <span class="hint">(ms, direct only)</span></label>
+                <input type="number" id="cfgPeriod" placeholder="e.g. 50" min="1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cfgPreview">Config String Preview</label>
+              <input type="text" id="cfgPreview" class="cfg-preview" placeholder="value:accelX, ip:192.168.1.50, port:9000, adr:/sensor/x" readonly>
+            </div>
             <div class="btn-row">
-              <button class="btn btn-accent" id="btnPresetDirect">Send Direct</button>
+              <button class="btn btn-accent" id="btnCfgDirect">Send Direct</button>
+              <button class="btn btn-primary" id="btnCfgCreateMsg">Create Message</button>
+              <button class="btn btn-light" id="btnCfgCopy" title="Copy config string">📋 Copy</button>
             </div>
           </div>
+        </div>
+
+        <div class="card">
+          <h2>Keywords &amp; Definitions</h2>
+          <p class="card-desc">Quick reference for all <a href="https://github.com/halfsohappy/TheaterGWD" target="_blank">theaterGWD</a> / annieData keywords.</p>
+          <div class="form-group">
+            <input type="text" id="keywordSearch" placeholder="Search keywords..." class="keyword-search">
+          </div>
+          <div class="keyword-list" id="keywordList"></div>
         </div>
 
         <div class="card">

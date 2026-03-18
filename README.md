@@ -25,10 +25,18 @@ Optimized for [TheaterGWD / annieData](https://github.com/halfsohappy/TheaterGWD
 ## Quick Start
 
 ```bash
-git clone https://github.com/halfsohappy/oscl_gooey.git
-cd oscl_gooey
-pip install -r requirements.txt
-python run.py
+git clone https://github.com/halfsohappy/annieOSC.git
+cd annieOSC
+bash install.sh
+```
+
+That's it — one command after cloning.  The installer checks for Python, creates a virtual environment, installs dependencies, and launches the GUI in your browser.
+
+You can also pass options through to the server:
+
+```bash
+bash install.sh --port 8080
+bash install.sh --host 0.0.0.0 --no-browser
 ```
 
 The GUI opens automatically at **http://127.0.0.1:5000**.
@@ -65,18 +73,11 @@ If not, install it:
 brew install python
 
 # 2. Clone the project
-git clone https://github.com/halfsohappy/oscl_gooey.git
-cd oscl_gooey
+git clone https://github.com/halfsohappy/annieOSC.git
+cd annieOSC
 
-# 3. Create a virtual environment (recommended)
-python3 -m venv venv
-source venv/bin/activate
-
-# 4. Install dependencies
-pip install -r requirements.txt
-
-# 5. Run
-python run.py
+# 3. Run the installer (creates venv, installs deps, launches the GUI)
+bash install.sh
 ```
 
 ### Install on Ubuntu / Debian / Raspberry Pi
@@ -87,18 +88,11 @@ sudo apt update
 sudo apt install python3 python3-pip python3-venv
 
 # 2. Clone the project
-git clone https://github.com/halfsohappy/oscl_gooey.git
-cd oscl_gooey
+git clone https://github.com/halfsohappy/annieOSC.git
+cd annieOSC
 
-# 3. Create a virtual environment (recommended)
-python3 -m venv venv
-source venv/bin/activate
-
-# 4. Install dependencies
-pip install -r requirements.txt
-
-# 5. Run
-python run.py
+# 3. Run the installer
+bash install.sh
 ```
 
 ### Install on Windows
@@ -109,17 +103,19 @@ python run.py
 
 ```powershell
 # 1. Clone the project
-git clone https://github.com/halfsohappy/oscl_gooey.git
-cd oscl_gooey
+git clone https://github.com/halfsohappy/annieOSC.git
+cd annieOSC
 
-# 2. Create a virtual environment (recommended)
+# 2. Run the installer (uses Git Bash or WSL)
+bash install.sh
+```
+
+If you don't have `bash` on Windows, you can run manually:
+
+```powershell
 python -m venv venv
 venv\Scripts\activate
-
-# 3. Install dependencies
 pip install -r requirements.txt
-
-# 4. Run
 python run.py
 ```
 
@@ -130,8 +126,8 @@ python run.py
 If you prefer a simpler setup without a virtual environment:
 
 ```bash
-git clone https://github.com/halfsohappy/oscl_gooey.git
-cd oscl_gooey
+git clone https://github.com/halfsohappy/annieOSC.git
+cd annieOSC
 pip install -r requirements.txt
 python run.py
 ```
@@ -292,7 +288,7 @@ Forward OSC messages between endpoints with optional filtering.
 
 ### TheaterGWD Tab
 
-Pre-configured controls for [annieData](https://github.com/halfsohappy/TheaterGWD) sensor devices.
+Pre-configured controls for [TheaterGWD / annieData](https://github.com/halfsohappy/TheaterGWD) sensor devices.
 
 **Device Settings:**
 | Field | Description |
@@ -320,6 +316,23 @@ Pre-configured controls for [annieData](https://github.com/halfsohappy/TheaterGW
 - Choose a sensor value (`accelX`, `gyroY`, `baro`, `eulerZ`, etc.)
 - Set the target IP, port, and OSC address where data should be sent
 
+**Config String Builder** — visually compose config payloads with individual fields for every key that [TheaterGWD](https://github.com/halfsohappy/TheaterGWD) accepts:
+
+| Key | Description |
+|-----|-------------|
+| `value` | Which sensor to read (accelX, gyroY, baro, etc.) |
+| `ip` | Destination IP address |
+| `port` | Destination port number |
+| `adr` | OSC address path (aliases: addr, address) |
+| `low` | Output range minimum (alias: min) |
+| `high` | Output range maximum (alias: max) |
+| `patch` | Assign message to a patch |
+| `period` | Send interval in ms (direct command only) |
+
+The builder shows a live preview of the config string and lets you either send it as a `direct` command or create a named message.
+
+**Keywords & Definitions** — searchable reference for all TheaterGWD commands, config keys, and sensor value names with plain-language descriptions.
+
 **Device Reply Listener** — listen for `/reply/{device}/...` responses.
 
 ### Monitor Tab
@@ -338,6 +351,7 @@ Full message log across all directions (send/receive/bridge).
 ```
 annieOSC/
 ├── run.py                  # Entry point — starts the web server
+├── install.sh              # One-command installer (venv + deps + launch)
 ├── requirements.txt        # Python dependencies (3 packages)
 ├── app/
 │   ├── __init__.py
@@ -346,6 +360,7 @@ annieOSC/
 │   ├── templates/
 │   │   └── index.html      # Single-page GUI
 │   └── static/
+│       ├── favicon.svg     # Browser tab icon (Annabel Portfolio style)
 │       ├── css/
 │       │   └── style.css   # Stylesheet (Annabel Portfolio design)
 │       └── js/

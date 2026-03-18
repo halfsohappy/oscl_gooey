@@ -450,11 +450,42 @@
     });
   });
 
-  // Direct send
-  $("#btnPresetDirect").addEventListener("click", () => {
+  // Config string builder — update preview when fields change
+  function updateCfgPreview() {
+    var parts = [];
+    var val = $("#cfgValue") ? $("#cfgValue").value : "";
+    var ip = $("#cfgIP") ? $("#cfgIP").value : "";
+    var port = $("#cfgPort") ? $("#cfgPort").value : "";
+    var adr = $("#cfgAdr") ? $("#cfgAdr").value : "";
+    var low = $("#cfgLow") ? $("#cfgLow").value.trim() : "";
+    var high = $("#cfgHigh") ? $("#cfgHigh").value.trim() : "";
+    var patchField = $("#cfgPatch") ? $("#cfgPatch").value.trim() : "";
+    var period = $("#cfgPeriod") ? $("#cfgPeriod").value.trim() : "";
+    if (val) parts.push("value:" + val);
+    if (ip) parts.push("ip:" + ip);
+    if (port) parts.push("port:" + port);
+    if (adr) parts.push("adr:" + adr);
+    if (low) parts.push("low:" + low);
+    if (high) parts.push("high:" + high);
+    if (patchField) parts.push("patch:" + patchField);
+    if (period) parts.push("period:" + period);
+    var preview = $("#cfgPreview");
+    if (preview) preview.value = parts.join(", ");
+  }
+
+  ["cfgValue", "cfgIP", "cfgPort", "cfgAdr", "cfgLow", "cfgHigh", "cfgPatch", "cfgPeriod"].forEach(function (id) {
+    var el = $("#" + id);
+    if (el) el.addEventListener("input", updateCfgPreview);
+    if (el) el.addEventListener("change", updateCfgPreview);
+  });
+
+  updateCfgPreview();
+
+  // Direct send via config builder
+  $("#btnCfgDirect").addEventListener("click", () => {
     const device = $("#presetDevice").value || "bart";
-    const name = $("#presetDirectName").value || "quickSend";
-    const payload = $("#presetDirectPayload").value;
+    const name = $("#cfgDirectName").value || "quickSend";
+    const payload = $("#cfgPreview").value;
     const host = $("#presetHost").value;
     const port = parseInt($("#presetPort").value, 10);
 
@@ -468,6 +499,44 @@
     }).then((res) => {
       if (res.status === "ok") toast(`Direct sent: ${name}`, "success");
     });
+  });
+
+  // Create Message via config builder
+  $("#btnCfgCreateMsg").addEventListener("click", () => {
+    const device = $("#presetDevice").value || "bart";
+    const name = $("#cfgDirectName").value || "quickSend";
+    const payload = $("#cfgPreview").value;
+    const host = $("#presetHost").value;
+    const port = parseInt($("#presetPort").value, 10);
+
+    const address = `/annieData/${device}/msg/${name}`;
+
+    api("send", {
+      host: host,
+      port: port,
+      address: address,
+      args: payload || null,
+    }).then((res) => {
+      if (res.status === "ok") toast(`Created message: ${name}`, "success");
+    });
+  });
+
+  // Copy config string
+  $("#btnCfgCopy").addEventListener("click", () => {
+    const text = $("#cfgPreview").value;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        toast("Config string copied", "success");
+      });
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      toast("Config string copied", "success");
+    }
   });
 
   // Preset listen
@@ -501,6 +570,46 @@
       }
     });
   });
+
+  // Keywords & Definitions reference
+  fetch("/api/presets/theater-gwd")
+    .then((r) => r.json())
+    .then((data) => {
+      if (data.presets && data.presets.keywords) {
+        renderKeywords(data.presets.keywords);
+      }
+    })
+    .catch(() => {});
+
+  function renderKeywords(keywords) {
+    const list = $("#keywordList");
+    if (!list) return;
+    var entries = Object.entries(keywords).sort(function (a, b) {
+      return a[0].localeCompare(b[0]);
+    });
+    list.innerHTML = "";
+    entries.forEach(function (pair) {
+      var div = document.createElement("div");
+      div.className = "keyword-item";
+      div.innerHTML =
+        '<span class="keyword-term">' + pair[0] + "</span>" +
+        '<span class="keyword-def">' + pair[1] + "</span>";
+      list.appendChild(div);
+    });
+
+    // Search/filter
+    var search = $("#keywordSearch");
+    if (search) {
+      search.addEventListener("input", function () {
+        var q = search.value.trim().toLowerCase();
+        var items = list.querySelectorAll(".keyword-item");
+        items.forEach(function (item) {
+          var text = item.textContent.toLowerCase();
+          item.style.display = text.includes(q) ? "" : "none";
+        });
+      });
+    }
+  }
 
   // ==================== MONITOR TAB ====================
 
