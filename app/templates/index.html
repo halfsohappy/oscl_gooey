@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>oscl gooey — OSC Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&family=Playwrite+DE+Grund:wght@100..400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-bar"></div>
+    <div class="header-content">
+      <h1 class="site-title">oscl gooey</h1>
+      <p class="site-subtitle">Open Sound Control — Send · Monitor · Receive</p>
+    </div>
+    <div class="header-status">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">Connecting...</span>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="send">Send</button>
+    <button class="tab-btn" data-tab="receive">Receive</button>
+    <button class="tab-btn" data-tab="bridge">Bridge</button>
+    <button class="tab-btn" data-tab="presets">TheaterGWD</button>
+    <button class="tab-btn" data-tab="monitor">Monitor</button>
+  </nav>
+
+  <main class="main-content">
+
+    <!-- ==================== SEND TAB ==================== -->
+    <section class="tab-panel active" id="tab-send">
+      <div class="panel-grid">
+        <div class="card">
+          <h2>Send OSC Message</h2>
+          <form id="sendForm" autocomplete="off">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="sendHost">Host</label>
+                <input type="text" id="sendHost" value="127.0.0.1" placeholder="127.0.0.1">
+              </div>
+              <div class="form-group">
+                <label for="sendPort">Port</label>
+                <input type="number" id="sendPort" value="8000" min="1" max="65535" placeholder="8000">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="sendAddress">OSC Address</label>
+              <input type="text" id="sendAddress" placeholder="/path/to/control" value="/test">
+            </div>
+            <div class="form-group">
+              <label for="sendArgs">Arguments <span class="hint">(space-separated: 1 2.0 hello)</span></label>
+              <input type="text" id="sendArgs" placeholder='1 2.0 "hello"'>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="sendInterval">Interval (ms)</label>
+                <input type="number" id="sendInterval" value="1000" min="10" placeholder="1000">
+              </div>
+            </div>
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary" id="btnSendOnce">Send Once</button>
+              <button type="button" class="btn btn-accent" id="btnSendRepeat">Start Repeat</button>
+              <button type="button" class="btn btn-stop" id="btnSendStop" disabled>Stop</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Send from JSON</h2>
+          <div class="form-group">
+            <label for="jsonInput">JSON Messages</label>
+            <textarea id="jsonInput" rows="8" placeholder='[
+  { "address": "/light/on", "args": [1] },
+  { "address": "/light/off", "args": [0] }
+]'></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="jsonHost">Host</label>
+              <input type="text" id="jsonHost" value="127.0.0.1" placeholder="127.0.0.1">
+            </div>
+            <div class="form-group">
+              <label for="jsonPort">Port</label>
+              <input type="number" id="jsonPort" value="8000" min="1" max="65535" placeholder="8000">
+            </div>
+            <div class="form-group">
+              <label for="jsonInterval">Interval (ms)</label>
+              <input type="number" id="jsonInterval" value="0" min="0" placeholder="0">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary" id="btnSendJson">Send JSON</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== RECEIVE TAB ==================== -->
+    <section class="tab-panel" id="tab-receive">
+      <div class="panel-grid">
+        <div class="card">
+          <h2>Receive OSC Messages</h2>
+          <form id="recvForm" autocomplete="off">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="recvPort">Listen Port</label>
+                <input type="number" id="recvPort" value="9000" min="1" max="65535" placeholder="9000">
+              </div>
+              <div class="form-group">
+                <label for="recvFilter">Filter <span class="hint">(prefix - to exclude)</span></label>
+                <input type="text" id="recvFilter" placeholder="e.g. sensor or -debug">
+              </div>
+            </div>
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary" id="btnRecvStart">Start Listening</button>
+              <button type="button" class="btn btn-stop" id="btnRecvStop" disabled>Stop</button>
+            </div>
+          </form>
+          <div class="active-list" id="activeReceivers">
+            <h3>Active Listeners</h3>
+            <div class="list-empty">No active listeners</div>
+          </div>
+        </div>
+        <div class="card card-log">
+          <div class="log-header">
+            <h2>Incoming Messages</h2>
+            <div class="log-controls">
+              <label class="toggle-label"><input type="checkbox" id="recvAutoScroll" checked> Auto-scroll</label>
+              <button type="button" class="btn btn-small btn-light" id="btnRecvClear">Clear</button>
+            </div>
+          </div>
+          <div class="log-feed" id="recvFeed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== BRIDGE TAB ==================== -->
+    <section class="tab-panel" id="tab-bridge">
+      <div class="panel-grid">
+        <div class="card">
+          <h2>Bridge OSC Messages</h2>
+          <p class="card-desc">Forward messages from one port to another host/port with optional filtering.</p>
+          <form id="bridgeForm" autocomplete="off">
+            <div class="form-section">
+              <h3>Input</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bridgeInPort">Listen Port</label>
+                  <input type="number" id="bridgeInPort" value="7001" min="1" max="65535" placeholder="7001">
+                </div>
+              </div>
+            </div>
+            <div class="bridge-arrow">→</div>
+            <div class="form-section">
+              <h3>Output</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bridgeOutHost">Host</label>
+                  <input type="text" id="bridgeOutHost" value="127.0.0.1" placeholder="127.0.0.1">
+                </div>
+                <div class="form-group">
+                  <label for="bridgeOutPort">Port</label>
+                  <input type="number" id="bridgeOutPort" value="7010" min="1" max="65535" placeholder="7010">
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="bridgeFilter">Filter <span class="hint">(prefix - to exclude)</span></label>
+              <input type="text" id="bridgeFilter" placeholder="e.g. light or -debug">
+            </div>
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary" id="btnBridgeStart">Start Bridge</button>
+              <button type="button" class="btn btn-stop" id="btnBridgeStop" disabled>Stop</button>
+            </div>
+          </form>
+          <div class="active-list" id="activeBridges">
+            <h3>Active Bridges</h3>
+            <div class="list-empty">No active bridges</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== THEATERGWD PRESETS TAB ==================== -->
+    <section class="tab-panel" id="tab-presets">
+      <div class="panel-grid">
+        <div class="card">
+          <h2>TheaterGWD Quick Commands</h2>
+          <p class="card-desc">Pre-configured commands for <strong>annieData</strong> sensor devices.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="presetHost">Device Host</label>
+              <input type="text" id="presetHost" value="127.0.0.1" placeholder="Device IP">
+            </div>
+            <div class="form-group">
+              <label for="presetPort">Device Port</label>
+              <input type="number" id="presetPort" value="8000" min="1" max="65535">
+            </div>
+            <div class="form-group">
+              <label for="presetDevice">Device Name</label>
+              <input type="text" id="presetDevice" value="bart" placeholder="e.g. bart">
+            </div>
+          </div>
+
+          <div class="preset-section">
+            <h3>Device Control</h3>
+            <div class="preset-grid">
+              <button class="btn btn-preset" data-cmd="blackout" title="Stop all output">⬛ Blackout</button>
+              <button class="btn btn-preset" data-cmd="restore" title="Resume output">🔆 Restore</button>
+              <button class="btn btn-preset" data-cmd="save" title="Save to NVS">💾 Save</button>
+              <button class="btn btn-preset" data-cmd="load" title="Load from NVS">📂 Load</button>
+              <button class="btn btn-preset" data-cmd="status_config" title="Request config status">📊 Status</button>
+              <button class="btn btn-preset" data-cmd="nvs_clear" title="Clear NVS storage">🗑️ NVS Clear</button>
+            </div>
+          </div>
+
+          <div class="preset-section">
+            <h3>List</h3>
+            <div class="preset-grid">
+              <button class="btn btn-preset" data-cmd="list_messages" title="List all messages">📋 Messages</button>
+              <button class="btn btn-preset" data-cmd="list_patches" title="List all patches">📋 Patches</button>
+              <button class="btn btn-preset" data-cmd="list_all" title="List everything">📋 All</button>
+            </div>
+          </div>
+
+          <div class="preset-section">
+            <h3>Patches</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="presetPatchName">Patch Name</label>
+                <input type="text" id="presetPatchName" value="sensors" placeholder="Patch name">
+              </div>
+            </div>
+            <div class="preset-grid">
+              <button class="btn btn-preset" data-cmd="start_patch" title="Start patch">▶️ Start</button>
+              <button class="btn btn-preset" data-cmd="stop_patch" title="Stop patch">⏹️ Stop</button>
+            </div>
+          </div>
+
+          <div class="preset-section">
+            <h3>Create Message</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="presetMsgName">Message Name</label>
+                <input type="text" id="presetMsgName" value="accelX" placeholder="Message name">
+              </div>
+              <div class="form-group">
+                <label for="presetMsgValue">Sensor Value</label>
+                <select id="presetMsgValue">
+                  <option value="accelX">accelX</option>
+                  <option value="accelY">accelY</option>
+                  <option value="accelZ">accelZ</option>
+                  <option value="accelLength">accelLength</option>
+                  <option value="gyroX">gyroX</option>
+                  <option value="gyroY">gyroY</option>
+                  <option value="gyroZ">gyroZ</option>
+                  <option value="gyroLength">gyroLength</option>
+                  <option value="baro">baro</option>
+                  <option value="eulerX">eulerX</option>
+                  <option value="eulerY">eulerY</option>
+                  <option value="eulerZ">eulerZ</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="presetMsgTargetIP">Target IP</label>
+                <input type="text" id="presetMsgTargetIP" value="192.168.1.50" placeholder="Target IP">
+              </div>
+              <div class="form-group">
+                <label for="presetMsgTargetPort">Target Port</label>
+                <input type="number" id="presetMsgTargetPort" value="9000" min="1" max="65535">
+              </div>
+              <div class="form-group">
+                <label for="presetMsgTargetAddr">Target Address</label>
+                <input type="text" id="presetMsgTargetAddr" value="/sensor/x" placeholder="/sensor/x">
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btnPresetCreateMsg">Create Message</button>
+            </div>
+          </div>
+
+          <div class="preset-section">
+            <h3>Direct Send</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="presetDirectName">Name</label>
+                <input type="text" id="presetDirectName" value="quickSend" placeholder="Name">
+              </div>
+              <div class="form-group">
+                <label for="presetDirectPayload">Config Payload</label>
+                <input type="text" id="presetDirectPayload" placeholder='value:accelX, ip:192.168.1.50, port:9000, adr:/test'>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-accent" id="btnPresetDirect">Send Direct</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Listen for Device Replies</h2>
+          <p class="card-desc">Receive <code>/reply/{'{device}'}/...</code> messages from your annieData device.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="presetListenPort">Listen Port</label>
+              <input type="number" id="presetListenPort" value="9000" min="1" max="65535">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="btnPresetListen">Start Listening</button>
+            <button class="btn btn-stop" id="btnPresetListenStop" disabled>Stop</button>
+          </div>
+          <div class="log-feed preset-log" id="presetFeed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== MONITOR TAB ==================== -->
+    <section class="tab-panel" id="tab-monitor">
+      <div class="panel-grid panel-full">
+        <div class="card card-log">
+          <div class="log-header">
+            <h2>Message Log</h2>
+            <div class="log-controls">
+              <label class="toggle-label"><input type="checkbox" id="monAutoScroll" checked> Auto-scroll</label>
+              <input type="text" id="monFilter" class="log-filter" placeholder="Filter messages...">
+              <button type="button" class="btn btn-small btn-light" id="btnMonClear">Clear</button>
+            </div>
+          </div>
+          <div class="log-feed log-feed-full" id="monFeed"></div>
+          <div class="log-stats">
+            <span id="monCount">0 messages</span>
+            <span id="monRate">0 msg/s</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <footer class="app-footer">
+    <span>oscl gooey v1.0 — Open Sound Control GUI</span>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
